@@ -1,9 +1,9 @@
-all: bin
+all: boot_sect.bin
 
 run: boot_sect.bin
 	qemu-system-i386 boot_sect.bin
 
-bin: boot_sect.asm
+boot_sect.bin: boot_sect.asm
 	nasm boot_sect.asm -f bin -o boot_sect.bin
 
 clean:
