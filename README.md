@@ -19,6 +19,36 @@ In protected mode la segmentazione offre principalmente due vantaggi:
 - il codice di un segmento puo' essere interdetto dall'esecuzione del codice di un segmento piu' privilegiato, in modo da proteggere il codice del kernel dalle applicazioni utente.
 - si puo' implementare la memoria virtuale in modo che le pagine di memoria di un processo possano essere spostate sul disco o in RAM in base alle necessita'. <br />
 
-#### GDT (Global Descriptor Table)
+### GDT (Global Descriptor Table)
 Per entrare in 32 bit protected mode bisogna creare la GDT, una struttura che definisce i segmenti di memoria e i loro attributi.
+Ogni entry della tabella e' grande esattamente 8 byte e la sua struttura e' la seguente:
+- 0....15   Limit           (4 byte inferiori del descrittore Limit)
+- 16...31   Base            (4 byte inferiori del descrittore Base Address) 
+- 32...39   Base            (2 byte mediani del descrittore Base Address)
+- 40...47   Access Byte     (flag che descrivono chi ha accesso al segmento a cui fa riferimento questa entry)
+- 48...51   Limit           (4 bit superiori del descrittore Limit)
+- 52...55   Flags           (4 flag che influenzano la dimensione del segmento)
+- 56...63   Base            (2 byte superiori del descrittore Base Address)
 
+Con Access Byte cosi' suddiviso:
+- 40        Ac      (Accessed: viene settato a 1 quando viene fatto un accesso a tale segmento. Inizialmente e' 0)
+- 41        RW      (Readable (Code Segment): 1->Lettura. Non e' concessa scrittura. Writable (Data Segment): 1->Scrittura. E' sempre possibile Lettura)
+- 42        DC      (Direction (Code Segment): 1 -> il codice puo' essere eseguito da un livello di privilegio inferiore. 0 -> eseguito solo da Privl
+                     Conforming (Data Segment): 1 -> il segmento cresce verso il basso. Normalmente viene settato a 0)
+- 43        Ex      (Executable: 1 -> il codice all'interno del segmento e' eseguibile)
+- 44        S       (Descriptor: 1 -> code or data, 0 -> segmento di sistema)
+- 45...46   Privl   (Privilege level: i privilegi vanno da 0 (kernel) a 3 (programmi utente))
+- 47        Pr      (Present: e' settato a 1 se il segmento e' valido)
+
+Con Flags suddiviso cosi':
+- 52    A       (Available: non utilizzato dalla CPU, puo' essere settato a 0)
+- 53    
+- 54    Sz      (Size: 0 -> 16 bit protected mode. 1 -> 32 bit protected mode)
+- 55    Gr      (Granularity: 0 -> Limit e' specificato in byte. 1 -> Limit e' specificato in pagine da 4KB)
+
+Per entrare in 32 bit protected mode c'e' bisogno solo di 3 descrittori nella GDT:
+- NULL descriptor (e' la prima entry della tabella e deve sempre esistere. Non descrive nessun segmento)
+- 4 GB code descriptor
+- 4 GB data descriptor
+
+IL kernel avra' bisogno di accedere all'intera memoria. Solo successivamente, quando verranno lanciati dei processi, dovranno essere creati dei descrittori per segmenti di memoria piu' piccoli.
