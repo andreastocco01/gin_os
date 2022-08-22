@@ -1,3 +1,5 @@
+.PHONY: clean, run
+
 all: boot_sect.bin
 
 run: boot_sect.bin
