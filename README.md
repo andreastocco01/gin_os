@@ -51,4 +51,7 @@ Per entrare in 32 bit protected mode c'e' bisogno solo di 3 descrittori nella GD
 - 4 GB code descriptor
 - 4 GB data descriptor
 
-IL kernel avra' bisogno di accedere all'intera memoria. Solo successivamente, quando verranno lanciati dei processi, dovranno essere creati dei descrittori per segmenti di memoria piu' piccoli.
+IL kernel avra' bisogno di accedere all'intera memoria. Solo successivamente, quando verranno lanciati dei processi, dovranno essere creati dei descrittori per segmenti di memoria piu' piccoli (meglio usare il paging...).
+
+### Entrare in 32 bit protected mode
+Una volta definita la GDT bisogna disabilitare gli interrupt (cli) perche' gli interrupt in real mode sono completamente diversi rispetto a quelli in protected mode e cio' rende la IVT (Interrupt Vector Table) definita dal BIOS completamente inutile. Inoltre, anche se si riuscisse ad eseguire una routine del BIOS, questa sarebbe a 16 bit e quindi non avrebbe idea di che cosa siano i segmenti a 32 bit definiti prima. Lo step successivo e' quello di comunicare alla CPU la GDT appena creata. Per farlo basta utilizzare il comando lgdt [gdt_descriptor]

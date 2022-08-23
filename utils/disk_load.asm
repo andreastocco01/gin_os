@@ -5,7 +5,7 @@ disk_load:
     mov ch, 0 ; cilindro: 0
     mov cl, 2 ; settore: 2 (nel settore 1 c'e' boot_sect.asm, il settore 2 l'ho riempito di 'A')
     mov dh, 0 ; head: 0 (sta ad indicare se voglio leggere la faccia superiore o inferiore del disco)
-    mov dl, [diskNum] ; voglio leggere i dati dallo stesso disco da cui sto facendo il booting
+    mov dl, [disk_num] ; voglio leggere i dati dallo stesso disco da cui sto facendo il booting
 
     ; ora devo dire alla CPU dove salvare, in RAM, i dati letti. questi devono essere salvati in es:bx
     push ax
