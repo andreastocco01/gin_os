@@ -1,10 +1,10 @@
 gdt_start:
 
-null_descriptor:
+gdt_null:
     dd 0x0
     dd 0x0
 
-code_descriptor:
+gdt_code:
     dw 0xffff    ; Limit (bits 0...15)
     dw 0x0000    ; Base (bits 16...31)
     db 0x00      ; Base (bits 32...39)
@@ -12,7 +12,7 @@ code_descriptor:
     db 11001111b ; Flags (Granularity: 1, 32-bit default: 1, 64 bit seg: 0, AVL:0), Limit (bits 48...51)
     db 0x00      ; Base (bits 56...63)
 
-data_descriptor:
+gdt_data:
     dw 0xffff
     dw 0x0000
     db 0x00
