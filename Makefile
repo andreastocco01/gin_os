@@ -1,12 +1,12 @@
 .PHONY: clean, run
 
-all: bootloader.bin
+all: boot.bin
 
-run: bootloader.bin
-	qemu-system-i386 bootloader.bin
+run: boot.bin
+	qemu-system-i386 boot.bin
 
-bootloader.bin: bootloader.asm
-	nasm bootloader.asm -f bin -o bootloader.bin
+boot.bin: boot.asm
+	nasm boot.asm -f bin -o boot.bin
 
 clean:
 	rm *.bin

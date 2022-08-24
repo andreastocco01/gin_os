@@ -11,7 +11,7 @@ start:
     mov sp, bp
 
     mov bx, msg_real_mode
-    call print_string
+    call print_string_rm
     ; call disk_load
 
     ; effettuo lo switch in protected mode
@@ -24,7 +24,9 @@ start:
     or eax, 0x1
     mov cr0, eax
 
-    jmp CODE_SEG:start_protected_mode
+    jmp CODE_SEG:start_protected_mode ; CODE_SEG parte da 0 ed e' grande come tutta la memoria, quindi sarebbe uguale fare jmp start_protected_mode
+                                      ; metto anche il segmento perche' cosi' obbligo la CPU a fare un far jump e quindi a svuotare la pipeline
+                                      ; con il far jump, cs viene automaticamente aggiornato a CODE_SEG
 
 %include "utils/print_string.asm"
 %include "gdt.asm"
@@ -33,12 +35,18 @@ start:
 [bits 32]
 
 start_protected_mode:
-    mov ax, DATA_SEG
+
+    ; per entrare in 32 bit protected mode ho abilitato la segmentazione (anche se i segmenti definiti sono completamente inutili)
+    ; ora dovrei associare a ciascun segment register il rispettivo selettore nella GDT. Ora, essendoci solo due segmenti sovrapposti
+    ; la segmentazione e' "fake" e quindi basta settare tutti i segment register al DATA_SEG (o al CODE_SEG) perche' tanto la
+    ; segmentazione non e' realmente implementata (in 16 bit il contenuto di tutti questi registri era 0, infatti non c'era
+    ; la segmentazione)
+    mov ax, DATA_SEG 
     mov ds, ax
     mov ss, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
+    mov es, ax ; extra segment
+    mov fs, ax ; general purpose
+    mov gs, ax ; general purpose
 
     mov ebp, 0x90000
     mov esp, ebp
@@ -49,7 +57,7 @@ start_protected_mode:
 
 
 msg_real_mode db 'Started in 16 bit real mode', 0
-msg_protected_mode db 'Switch in 32 bit protected mode', 0
+msg_protected_mode db 'Switched in 32 bit protected mode', 0
 disk_num db 0
 
 times 510 - ($ - $$) db 0

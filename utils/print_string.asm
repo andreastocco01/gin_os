@@ -1,7 +1,7 @@
 [bits 16]
 
 ; bx: address of the string
-print_string:
+print_string_rm:
     pusha
     mov ah, 0x0e ; scrolling teletype BIOS routine
 
