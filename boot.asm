@@ -12,7 +12,19 @@ start:
 
     mov bx, msg_real_mode
     call print_string_rm
-    ; call disk_load
+
+    mov bx, msg_loading_kernel
+    call print_string_rm
+    
+    ; carico il kernel in memoria. lo faccio adesso perche' in protected mode non ho le chiamate al BIOS
+    mov ah, 0x02
+    mov al, 15 ; leggo 15 settori, voglio essere sicuro di caricare l'intero kernel
+    mov bx, [kernel_position] ; indirizzo di destinazione in memoria
+    mov ch, 0 ; cilindro 0, lo stesso del bootloader
+    mov cl, 2 ; nel settore 1 c'e' il bootloader, devo leggere da quello successivo per prelevare il kernel
+    mov dh, 0 ; leggo la faccia superiore del disco
+    mov dl, [disk_num] ; leggo dallo stesso disco in cui e' presente il bootloader
+    call disk_load
 
     ; effettuo lo switch in protected mode
 
@@ -30,7 +42,7 @@ start:
 
 %include "utils/print_string.asm"
 %include "gdt.asm"
-; %include "utils/disk_load.asm"
+%include "utils/disk_load.asm"
 
 [bits 32]
 
@@ -58,9 +70,11 @@ start_protected_mode:
 
 msg_real_mode db 'Started in 16 bit real mode', 0
 msg_protected_mode db 'Switched in 32 bit protected mode', 0
+msg_loading_kernel db 'Loading kernel in memory', 0
 disk_num db 0
+kernel_position equ 0x1000
 
 times 510 - ($ - $$) db 0
 dw 0xaa55
 
-; times 512 db '.' ; riempio il settore successivo a quello di booting di '.'
+times 512 db '.' ; riempio il settore successivo a quello di booting di '.'
