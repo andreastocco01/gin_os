@@ -13,6 +13,7 @@ disk_load:
     push bx
     push ax
 
+    mov ah, 0x2
     int 0x13 ; leggo il settore specificato dai parametri della funzione
 
     ; controllo che non ci siano stati errori
@@ -37,4 +38,4 @@ disk_error:
     jmp $
 
 
-disk_error_message db 'Disk read error!', 0
+disk_error_message db 'Disk read error!', 0xa, 0xd, 0x0
