@@ -1,24 +1,24 @@
 .PHONY: clean, run, link
 
-all: link
+all: out/os.bin
 
-run: os.bin
-	qemu-system-i386 os.bin
+run: out/os.bin
+	qemu-system-i386 out/os.bin
 
-link: boot.bin kernel.bin
-	cat boot.bin kernel.bin > os.bin
+out/os.bin: out/boot.bin out/kernel.bin
+	cat out/boot.bin out/kernel.bin > out/os.bin
 
-boot.bin: boot.asm
-	nasm boot.asm -f bin -o boot.bin
+out/boot.bin: boot/boot.asm
+	nasm boot/boot.asm -f bin -o out/boot.bin
 
-kernel.bin: kernel_entry.o kernel.o
-	ld -m elf_i386 -o kernel.bin -Ttext 0x1000 kernel_entry.o kernel.o --oformat binary
+out/kernel.bin: out/kernel_entry.o out/kernel.o
+	ld -m elf_i386 -o out/kernel.bin -Ttext 0x1000 out/kernel_entry.o out/kernel.o --oformat binary
 
-kernel_entry.o: kernel_entry.asm
-	nasm kernel_entry.asm -felf -o kernel_entry.o
+out/kernel_entry.o: boot/kernel_entry.asm
+	nasm boot/kernel_entry.asm -felf -o out/kernel_entry.o
 
-kernel.o: kernel.c
-	gcc -m32 -ffreestanding -c kernel.c -o kernel.o
+out/kernel.o: kernel/kernel.c
+	gcc -m32 -ffreestanding -c kernel/kernel.c -o out/kernel.o
 
 clean:
-	rm *.bin *.o
+	rm out/*

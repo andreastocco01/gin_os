@@ -42,9 +42,9 @@ start:
                                       ; metto anche il segmento perche' cosi' obbligo la CPU a fare un far jump e quindi a svuotare la pipeline
                                       ; con il far jump, cs viene automaticamente aggiornato a CODE_SEG
 
-%include "utils/print_string.asm"
-%include "utils/disk_load.asm"
-%include "gdt.asm"
+%include "boot/utils/print_string.asm"
+%include "boot/utils/disk_load.asm"
+%include "boot/gdt.asm"
 
 [bits 32]
 
