@@ -1,3 +1,5 @@
+[bits 16]
+
 ; ah -> BIOS read sector function (0x02)
 ; al -> numero di settori da leggere
 ; es:bx -> indirizzo di destinazione in memoria

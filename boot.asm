@@ -25,7 +25,10 @@ start:
     mov dl, [disk_num] ; leggo dallo stesso disco in cui e' presente il bootloader
     call disk_load
 
-    mov ah, 0x0e
+    mov bx, msg_done
+    call print_string_rm
+
+    mov ah, 0xe
     mov al, [kernel_position + 511]
     int 0x10
 
@@ -44,8 +47,8 @@ start:
                                       ; con il far jump, cs viene automaticamente aggiornato a CODE_SEG
 
 %include "utils/print_string.asm"
-%include "gdt.asm"
 %include "utils/disk_load.asm"
+%include "gdt.asm"
 
 [bits 32]
 
@@ -73,7 +76,8 @@ start_protected_mode:
 
 msg_real_mode db 'Started in 16 bit real mode', 0xa, 0xd, 0x0
 msg_protected_mode db 'Switched in 32 bit protected mode', 0x0
-msg_loading_kernel db 'Loading kernel in memory', 0xa, 0xd, 0x0
+msg_loading_kernel db 'Loading kernel in memory...', 0x0
+msg_done db 'Done', 0xa, 0xd, 0x0
 disk_num db 0
 kernel_position equ 0x1000
 

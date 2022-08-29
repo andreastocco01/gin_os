@@ -3,7 +3,7 @@
 ; bx: address of the string
 print_string_rm:
     pusha
-    mov ah, 0x0e ; scrolling teletype BIOS routine
+    mov ah, 0xe ; scrolling teletype BIOS routine
 
 .loop:
     mov al, [bx]
