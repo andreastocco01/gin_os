@@ -1,5 +1,4 @@
-int main(){
-    int a = 5;
-    int b = 6;
-    return a + b;
+void main(){
+    char* video_memory = (char*) 0xb8000;
+    *video_memory = 's';
 }

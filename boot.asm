@@ -17,7 +17,7 @@ start:
     call print_string_rm
     
     ; carico il kernel in memoria. lo faccio adesso perche' in protected mode non ho le chiamate al BIOS
-    mov al, 1 ; leggo 15 settori, voglio essere sicuro di caricare l'intero kernel
+    mov al, 15 ; leggo 15 settori, voglio essere sicuro di caricare l'intero kernel
     mov bx, kernel_position ; indirizzo di destinazione in memoria
     mov ch, 0 ; cilindro 0, lo stesso del bootloader
     mov cl, 2 ; nel settore 1 c'e' il bootloader, devo leggere da quello successivo per prelevare il kernel
@@ -27,10 +27,6 @@ start:
 
     mov bx, msg_done
     call print_string_rm
-
-    mov ah, 0xe
-    mov al, [kernel_position + 511]
-    int 0x10
 
     ; effettuo lo switch in protected mode
 
@@ -71,7 +67,10 @@ start_protected_mode:
 
     mov ebx, msg_protected_mode
     call print_string_pm
-    jmp $
+
+    jmp kernel_position ; salto all'indirizzo 0x1000 che, quando verra' eseguito il codice, conterra' la prima istruzione di kernel_entry.
+                        ; questo perche' con il linker metto il codice di kernel_entry sopra a quello di kernel.
+                        ; da kernel_entry posso decidere il punto di ingresso del kernel, che non deve essere per forza la prima istruzione
 
 
 msg_real_mode db 'Started in 16 bit real mode', 0xa, 0xd, 0x0
@@ -83,5 +82,3 @@ kernel_position equ 0x1000
 
 times 510 - ($ - $$) db 0
 dw 0xaa55
-
-times 512 db 'A' ; riempio il settore successivo a quello di booting di 'A'
