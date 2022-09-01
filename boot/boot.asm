@@ -62,6 +62,8 @@ start_protected_mode:
     mov fs, ax ; general purpose
     mov gs, ax ; general purpose
 
+    call disable_cursor; // non usero' piu' il cursore della scrolling teletype BIOS routine, lo disabilito.
+
     mov ebp, 0x90000
     mov esp, ebp
 
@@ -72,6 +74,24 @@ start_protected_mode:
                         ; questo perche' con il linker metto il codice di kernel_entry sopra a quello di kernel.
                         ; da kernel_entry posso decidere il punto di ingresso del kernel, che non deve essere per forza la prima istruzione
 
+
+disable_cursor:
+	pushf
+	push eax
+	push edx
+ 
+	mov dx, 0x3D4
+	mov al, 0xA	; low cursor shape register
+	out dx, al
+ 
+	inc dx
+	mov al, 0x20	; bits 6-7 unused, bit 5 disables the cursor, bits 0-4 control the cursor shape
+	out dx, al
+ 
+	pop edx
+	pop eax
+	popf
+	ret
 
 msg_real_mode db 'Started in 16 bit real mode', 0xa, 0xd, 0x0
 msg_protected_mode db 'Switched in 32 bit protected mode', 0x0
