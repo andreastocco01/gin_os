@@ -4,6 +4,14 @@
 int main() {
     setup_vga();
     clear_vga();
-    print_string("Il primo messaggio del kernel");
+    print_string("First line");
+    print_line();
+    print_string("Second line");
+    print_line();
+    print_string("Third line very very long");
+    print_string(" create with the concatenation of different strings");
+    print_string(" with more of 80 characters");
+    print_line();
+    print_string("Fourth line in the correct position");
     return 0;
 }

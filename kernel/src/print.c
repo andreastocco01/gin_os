@@ -1,26 +1,26 @@
 #include "../lib/print.h"
 
-uint8_t* vga_index = (uint8_t*) vga_address;
+uint8_t* vga_current_address = (uint8_t*) vga_initial_address;
 
 void clear_vga() {
     for(int i = 0; i < 80 * 25; i++) {
-        *vga_index = 0x20;
-        vga_index += 2;
+        *vga_current_address = 0x20;
+        vga_current_address += 2;
     }
-    vga_index = (uint8_t*) vga_address;
+    vga_current_address = (uint8_t*) vga_initial_address;
 }
 
 void setup_vga() {
-    vga_index++;
+    vga_current_address++;
     for(int i = 0; i < 80 * 25; i++) {
-        *vga_index = vga_color;
-        vga_index += 2;
+        *vga_current_address = vga_color;
+        vga_current_address += 2;
     }
-    vga_index = (uint8_t*) vga_address;
+    vga_current_address = (uint8_t*) vga_initial_address;
 }
 
-int str_length(char* str) {
-    int length = 0;
+uint32_t str_length(char* str) {
+    uint32_t length = 0;
     while(*str != 0) {
         str++;
         length++;
@@ -29,10 +29,22 @@ int str_length(char* str) {
 }
 
 void print_string(char* str) {
-    int length = str_length(str);
+    uint32_t length = str_length(str);
     for(int i = 0; i < length; i++) {
-        *vga_index = *str;
-        vga_index += 2;
+        *vga_current_address = *str;
+        vga_current_address += 2;
         str++;
+    }
+}
+
+uint32_t address_to_position() {
+    return (uint32_t) (vga_current_address - vga_initial_address) / 2;
+}
+
+void print_line() {
+    uint32_t absolute_pos = address_to_position();
+    uint32_t relative_pos = absolute_pos % 80;
+    for(int i = 0; i < 80 - relative_pos; i++) {
+        vga_current_address += 2;
     }
 }
