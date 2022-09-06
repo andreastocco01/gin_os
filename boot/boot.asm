@@ -17,7 +17,7 @@ start:
     call print_string_rm
     
     ; carico il kernel in memoria. lo faccio adesso perche' in protected mode non ho le chiamate al BIOS
-    mov al, 15 ; leggo 15 settori, voglio essere sicuro di caricare l'intero kernel
+    mov al, 50 ; numero di settori da leggere dal disco
     mov bx, kernel_position ; indirizzo di destinazione in memoria
     mov ch, 0 ; cilindro 0, lo stesso del bootloader
     mov cl, 2 ; nel settore 1 c'e' il bootloader, devo leggere da quello successivo per prelevare il kernel

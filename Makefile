@@ -2,7 +2,7 @@
 # $< = first dependency
 # $^ = all dependencies
 
-.PHONY: clean, run, link
+.PHONY: clean, run
 
 all: run
 
