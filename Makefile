@@ -18,6 +18,9 @@ out/boot.bin: boot/boot.asm
 out/kernel.bin: out/kernel_entry.o out/kernel.o out/print.o
 	ld -m elf_i386 -o $@ -Ttext 0x1000 $^ --oformat binary
 
+kernel.elf: out/kernel_entry.o out/kernel.o out/print.o
+	ld -m elf_i386 -o $@ -Ttext 0x1000 $^ --format elf
+
 out/kernel_entry.o: boot/kernel_entry.asm
 	nasm $< -felf -o $@
 
@@ -28,4 +31,4 @@ out/print.o: kernel/src/print.c
 	gcc -m32 -ffreestanding -c $< -o $@
 
 clean:
-	rm out/*
+	rm out/* kernel.elf
