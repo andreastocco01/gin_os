@@ -16,5 +16,7 @@ void setup_vga();
 uint32_t str_length(char* str);
 void print_string(char* str);
 void print_line();
+void print_int(int n);
+
 
 #endif

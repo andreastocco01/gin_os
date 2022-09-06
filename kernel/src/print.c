@@ -43,8 +43,43 @@ uint32_t address_to_position() {
 
 void print_line() {
     uint32_t absolute_pos = address_to_position();
-    uint32_t relative_pos = absolute_pos % 80;
+    uint32_t relative_pos = absolute_pos % 80; // ricavo quante volte devo mandare avanti il cursore per andare a capo
     for(int i = 0; i < 80 - relative_pos; i++) {
         vga_current_address += 2;
+    }
+}
+
+uint32_t n_digits(int n) {
+    if(n == 0) return 1;
+    int digits = 1;
+    int div = 10;
+    while(n / div != 0) {
+        digits++;
+        div *= 10;
+    }
+    return digits;
+}
+
+int pow(int base, int exp) {
+    int res = 1;
+    for(int i = 0; i < exp; i++) {
+        res = res * base;
+    }
+    return res;
+}
+
+void print_int(int n) {
+    if(n == 0) *vga_current_address = n + '0';
+    uint32_t digits = n_digits(n);
+    int div = pow(10, digits - 1);
+    int result = n;
+    int reminder = 0;
+    while(result != 0) {
+        reminder = result % div;
+        result = result / div;
+        *vga_current_address = result + '0';
+        vga_current_address += 2;
+        result = reminder;
+        div /= 10;
     }
 }

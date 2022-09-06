@@ -13,5 +13,18 @@ int main() {
     print_string(" with more of 80 characters");
     print_line();
     print_string("Fourth line in the correct position");
+    print_line();
+    print_int(0);
+    print_line();
+    print_int(3);
+    print_line();
+    print_int(12);
+    print_line();
+    print_int(495);
+    print_line();
+    print_int(3905);
+    print_line();
+    print_int(49586);
+    print_line();
     return 0;
 }
