@@ -15,7 +15,7 @@ out/os.bin: out/boot.bin out/kernel.bin
 out/boot.bin: boot/boot.asm
 	nasm $< -f bin -o $@
 
-out/kernel.bin: out/kernel_entry.o out/kernel.o out/print.o
+out/kernel.bin: out/kernel_entry.o out/main.o out/print.o out/math.o out/string.o
 	ld -m elf_i386 -o $@ -Ttext 0x1000 $^ --oformat binary
 
 kernel.elf: out/kernel_entry.o out/kernel.o out/print.o
@@ -24,10 +24,16 @@ kernel.elf: out/kernel_entry.o out/kernel.o out/print.o
 out/kernel_entry.o: boot/kernel_entry.asm
 	nasm $< -felf -o $@
 
-out/kernel.o: kernel/kernel.c
+out/main.o: kernel/src/main.c
 	gcc -m32 -ffreestanding -c $< -o $@
 
 out/print.o: kernel/src/print.c
+	gcc -m32 -ffreestanding -c $< -o $@
+
+out/string.o: kernel/src/string.c
+	gcc -m32 -ffreestanding -c $< -o $@
+
+out/math.o: kernel/src/math.c
 	gcc -m32 -ffreestanding -c $< -o $@
 
 clean:
