@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-uint32_t strlen(char* str);
+uint16_t strlen(char* str);
 void strcopy(char* to, char* from);
 
 #endif
