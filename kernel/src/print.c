@@ -32,19 +32,6 @@ void scroll_screen() {
     }
 }
 
-void print_string(char* str) {
-    uint16_t len = strlen(str);
-    for(uint16_t i = 0; i < len; i++) {
-        if(vga_current_address == (uint8_t*)(0xb8000 + (0xa0 * 0x19))) { // primo indirizzo al di fuori della vga
-            scroll_screen();
-            vga_current_address -= 0xa0;
-        }
-        *vga_current_address = *str;
-        vga_current_address += 2;
-        str++;
-    }
-}
-
 uint32_t address_to_position() {
     return (uint32_t) (vga_current_address - vga_initial_address) / 2;
 }
@@ -58,6 +45,22 @@ void print_line() {
     if(vga_current_address == (uint8_t*)(0xb8000 + (0xa0 * 0x19))) { // primo indirizzo al di fuori della vga
             scroll_screen();
             vga_current_address -= 0xa0;
+    }
+}
+
+void print_string(char* str) {
+    uint16_t len = strlen(str);
+    for(uint16_t i = 0; i < len; i++) {
+        if(vga_current_address == (uint8_t*)(0xb8000 + (0xa0 * 0x19))) { // primo indirizzo al di fuori della vga
+            scroll_screen();
+            vga_current_address -= 0xa0;
+        }
+        if(*str == '\n') print_line();
+        else {
+            *vga_current_address = *str;
+            vga_current_address += 2;
+            str++;
+        }
     }
 }
 

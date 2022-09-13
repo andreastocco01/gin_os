@@ -16,7 +16,6 @@ extern uint8_t* vga_current_address; // cella di memoria corrente
 
 void clear_vga();
 void setup_vga();
-void print_line();
 void printf(char* string, ...);
 
 

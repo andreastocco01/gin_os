@@ -5,14 +5,10 @@ int main() {
     setup_vga();
     clear_vga();
     for(int i = 0; i < 25; i++) {
-        printf("%d", i);
-        print_line();
+        printf("%d\n", i);
     }
-    printf("new line after scrolling");
-    print_line();
-    printf("scrolled again");
-    print_line();
-    print_line();
-    printf("new scroll");
+    printf("new line after scrolling\n");
+    printf("scrolled again\n");
+    printf("new scroll\n");
     return 0;
 }
