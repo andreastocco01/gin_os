@@ -2,15 +2,15 @@
 #include "../lib/math.h"
 #include "../lib/string.h"
 
-uint8_t* vga_current_address = (uint8_t*) vga_initial_address;
+uint8_t* vga_current_address = (uint8_t*) vga_first_address;
 
 void clear_vga() {
-    vga_current_address = (uint8_t*) vga_initial_address;
+    vga_current_address = (uint8_t*) vga_first_address;
     for(uint16_t i = 0; i < vga_length * vga_height; i++) {
         *vga_current_address = 0x20;
         vga_current_address += 2;
     }
-    vga_current_address = (uint8_t*) vga_initial_address;
+    vga_current_address = (uint8_t*) vga_first_address;
 }
 
 void setup_vga() {
@@ -19,28 +19,28 @@ void setup_vga() {
         *vga_current_address = vga_color;
         vga_current_address += 2;
     }
-    vga_current_address = (uint8_t*) vga_initial_address;
+    vga_current_address = (uint8_t*) vga_first_address;
 }
 
 void scroll_screen() {
-    uint8_t* from = (uint8_t*) 0xb80a0; // primo indirizzo della seconda riga della vga
+    uint8_t* from = (uint8_t*) vga_second_line_address; // primo indirizzo della seconda riga della vga
     // sposto ogni riga sulla sua precedente
-    while(from <= (uint8_t*) 0xb8f9e) { // ultimo indirizzo della vga
+    while(from <= (uint8_t*) vga_last_address) { // ultimo indirizzo della vga
         uint8_t* to = from - 0xa0;
         *to = *from;
         to += 2;
         from += 2;
     }
     // cancello l'ultima riga
-    from = (uint8_t*) 0xb8f00;
-    while(from <= (uint8_t*) 0xb8f9e) {
+    from = (uint8_t*) vga_last_line_address;
+    while(from <= (uint8_t*) vga_last_address) {
         *from = 0x20;
         from += 2;
     }
 }
 
 uint32_t address_to_position() {
-    return (uint32_t) (vga_current_address - vga_initial_address) / 2;
+    return (uint32_t) (vga_current_address - vga_first_address) / 2;
 }
 
 void print_line() {
@@ -53,7 +53,7 @@ void print_line() {
 
 void print_string(char* str) {
     while(*str != 0) {
-        if(vga_current_address == (uint8_t*) 0xb8fa0) { // primo indirizzo al di fuori della vga
+        if(vga_current_address == (uint8_t*) vga_first_out_address) { // primo indirizzo al di fuori della vga
             scroll_screen();
             vga_current_address -= 0xa0;
         }
@@ -80,7 +80,6 @@ uint16_t n_digits(uint32_t n) {
 }
 
 void itoa(char* string, uint32_t n) {
-    //char str[10] = "";
     uint16_t i = 0;
     uint16_t digits = n_digits(n);
     uint32_t div = pow(10, digits - 1);
@@ -94,7 +93,6 @@ void itoa(char* string, uint32_t n) {
         div /= 10;
     }
     string[i] = result + '0';
-    //strcopy(string, str);
 }
 
 void printf(char* string, ...) {
