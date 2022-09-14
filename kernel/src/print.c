@@ -116,6 +116,10 @@ void printf(char* string, ...) {
                     i += strlen(str_arg);
                     break;
                 }
+                case 'c': {
+                    buff[i++] = va_arg(args, int);
+                    break;
+                }
                 case 's': {
                     char* arg = va_arg(args, char*);
                     while(*arg != 0) {

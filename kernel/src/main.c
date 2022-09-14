@@ -22,6 +22,8 @@ int main() {
     printf("altra riga\n");
     printf("stampo un' intero %d\n", 789);
     printf("stampo un\nnumero negativo %d\n", -78);
-    printf("%s %d %d", "stringa", 48765, -3857);
+    printf("%s %d %d\n", "stringa", 48765, -3857);
+    printf("stampo un carattere %c\n", 'x');
+    printf("ultima stringa");
     return 0;
 }
