@@ -79,16 +79,19 @@ uint16_t n_digits(uint32_t n) {
     return digits;
 }
 
-void itoa(char* string, uint32_t n) {
+void itoa(char* string, int n) {
     uint16_t i = 0;
+    if(n < 0) {
+        string[i++] = '-';
+        n = -n;
+    }
     uint16_t digits = n_digits(n);
     uint32_t div = pow(10, digits - 1);
     uint32_t result = n;
     while(div != 1) {
         uint32_t reminder = result % div;
         result = result / div;
-        string[i] = result + '0';
-        i++;
+        string[i++] = result + '0';
         result = reminder;
         div /= 10;
     }
@@ -116,15 +119,13 @@ void printf(char* string, ...) {
                 case 's': {
                     char* arg = va_arg(args, char*);
                     while(*arg != 0) {
-                        buff[i] = *(arg++);
-                        i++;
+                        buff[i++] = *(arg++);
                     }
                     break;
                 }
             }
         } else {
-            buff[i] = *string;
-            i++;
+            buff[i++] = *string;
         }
         string++;
     }
