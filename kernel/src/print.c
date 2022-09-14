@@ -109,7 +109,7 @@ void printf(char* string, ...) {
             switch(*string) {
                 case 'd': {
                     // prendo l'intero da stampare
-                    char str_arg [10];
+                    char str_arg [10] = "";
                     itoa(str_arg, va_arg(args, int));
                     strcopy(&buff[i], str_arg);
                     i += strlen(str_arg);
