@@ -24,6 +24,7 @@ int main() {
     printf("stampo un\nnumero negativo %d\n", -78);
     printf("%s %d %d\n", "stringa", 48765, -3857);
     printf("stampo un carattere %c\n", 'x');
+    printf("ultima stringa\n");
     printf("ultima stringa");
     return 0;
 }

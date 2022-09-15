@@ -15,11 +15,11 @@ out/os.bin: out/boot.bin out/kernel.bin
 out/boot.bin: boot/boot.asm
 	nasm $< -f bin -o $@
 
-out/kernel.bin: out/kernel_entry.o out/main.o out/print.o out/math.o out/string.o
-	ld -m elf_i386 -o $@ -Ttext 0x1000 $^ --oformat binary
+out/kernel.bin: out/kernel.elf
+	objcopy -O binary $< $@
 
-kernel.elf: out/kernel_entry.o out/main.o out/print.o out/math.o out/string.o
-	ld -m elf_i386 -o $@ -Ttext 0x1000 $^ --format elf
+out/kernel.elf: out/kernel_entry.o out/main.o out/print.o out/math.o out/string.o
+	ld -m elf_i386 -Ttext 0x1000 $^ -o $@
 
 out/kernel_entry.o: boot/kernel_entry.asm
 	nasm $< -felf -o $@
@@ -37,4 +37,4 @@ out/math.o: kernel/src/math.c
 	gcc -m32 -ffreestanding -c $< -o $@
 
 clean:
-	rm out/* kernel.elf
+	rm out/*
