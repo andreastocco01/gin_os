@@ -7,7 +7,7 @@
 start:
     mov [disk_num], dl ; il numero del disco da cui sto facendo il booting viene salvato nel registro dl.
                        ; voglio leggere altri dati da questo disco, salvo tale numero in memoria
-    mov bp, 0x9000 ; posiziono lo stack in un indirizzo sicuro
+    mov bp, 0x9000     ; posiziono lo stack in un indirizzo sicuro
     mov sp, bp
 
     mov bx, msg_real_mode
@@ -17,12 +17,12 @@ start:
     call print_string_rm
     
     ; carico il kernel in memoria. lo faccio adesso perche' in protected mode non ho le chiamate al BIOS
-    mov al, 25 ; numero di settori da leggere dal disco
+    mov al, 25              ; numero di settori da leggere dal disco
     mov bx, kernel_position ; indirizzo di destinazione in memoria
-    mov ch, 0 ; cilindro 0, lo stesso del bootloader
-    mov cl, 2 ; nel settore 1 c'e' il bootloader, devo leggere da quello successivo per prelevare il kernel
-    mov dh, 0 ; leggo la faccia superiore del disco
-    mov dl, [disk_num] ; leggo dallo stesso disco in cui e' presente il bootloader
+    mov ch, 0               ; cilindro 0, lo stesso del bootloader
+    mov cl, 2               ; nel settore 1 c'e' il bootloader, devo leggere da quello successivo per prelevare il kernel
+    mov dh, 0               ; leggo la faccia superiore del disco
+    mov dl, [disk_num]      ; leggo dallo stesso disco in cui e' presente il bootloader
     call disk_load
 
     mov bx, msg_done
@@ -62,7 +62,7 @@ start_protected_mode:
     mov fs, ax ; general purpose
     mov gs, ax ; general purpose
 
-    call disable_cursor; // non usero' piu' il cursore della scrolling teletype BIOS routine, lo disabilito.
+    call disable_cursor ; non usero' piu' il cursore della scrolling teletype BIOS routine, lo disabilito.
 
     mov ebp, 0x90000
     mov esp, ebp
@@ -81,7 +81,7 @@ disable_cursor:
 	push edx
  
 	mov dx, 0x3D4
-	mov al, 0xA	; low cursor shape register
+	mov al, 0xA	    ; low cursor shape register
 	out dx, al
  
 	inc dx
