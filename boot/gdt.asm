@@ -23,7 +23,7 @@ gdt_data:
 gdt_end:
 
 gdt_descriptor:
-    dw gdt_end - gdt_start - 1 ; dimensione della tabella
+    dw gdt_end - gdt_start - 1 ; numero di byte della gdt
     dd gdt_start
 
 CODE_SEG equ gdt_code - gdt_start

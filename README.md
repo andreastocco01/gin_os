@@ -1,5 +1,6 @@
-# Bootloader
-```
+# GinOS
+
+```text
 - $ indirizzo istruzione corrente
 - $$ indirizzo sezione corrente
 ```
@@ -11,17 +12,21 @@ L'istruzione `times 510 - ($ - $$) db 0` rimpie di 0 lo spazio tra l'ultima istr
 In questo modo si riesce a collocare il magic number nella posizione giusta.
 
 ## 32 bit protected mode
-- i registri possono contenere 32 bit -> 4GB memoria indirizzabile <br />
+
+- i registri possono contenere 32 bit -> 4GB memoria indirizzabile
 
 In real mode ogni programma puo' accedere a qualsiasi cella di memoria, anche se e' utilizzata dal SO o da un altro programma.
 Non c'e' quindi nessuna restrizione su cio' che un programma puo' o non puo' fare.
 In protected mode la segmentazione offre principalmente due vantaggi:
+
 - il codice di un segmento puo' essere interdetto dall'esecuzione del codice di un segmento piu' privilegiato, in modo da proteggere il codice del kernel dalle applicazioni utente.
 - si puo' implementare la memoria virtuale in modo che le pagine di memoria di un processo possano essere spostate sul disco o in RAM in base alle necessita'.
 
 ## GDT (Global Descriptor Table)
+
 Per entrare in 32 bit protected mode bisogna creare la GDT, una struttura che definisce i segmenti di memoria e i loro attributi.
-```
+
+```text
 Ogni entry della tabella e' grande esattamente 8 byte e la sua struttura e' la seguente:
 - 0....15   Limit           (2 byte inferiori del descrittore Limit)
 - 16...31   Base            (2 byte inferiori del descrittore Base Address) 
@@ -49,6 +54,7 @@ Con Flags suddiviso cosi':
 ```
 
 Per entrare in 32 bit protected mode c'e' bisogno solo di 3 descrittori nella GDT:
+
 - NULL descriptor (e' la prima entry della tabella e deve sempre esistere. Non descrive nessun segmento)
 - 4 GB code descriptor
 - 4 GB data descriptor
@@ -56,25 +62,30 @@ Per entrare in 32 bit protected mode c'e' bisogno solo di 3 descrittori nella GD
 Code Segment e Data Segment sono grandi come tutta la memoria indirizzabile e sono sovrapposti. Non c'e' quindi nessun meccanismo di protezione. Questa configurazione si chiama Basic Flat Model. Viene quindi implementata una segmentazine "fittizia" solo per poter entrare in protected mode. Successivamente verra' implementato il paging per organizzare la memoria.
 
 ## Entrare in 32 bit protected mode
+
 Una volta definita la GDT bisogna disabilitare gli interrupt (`cli`) perche' gli interrupt in real mode sono completamente diversi rispetto a quelli in protected mode e cio' rende la IVT (Interrupt Vector Table) definita dal BIOS completamente inutile. Inoltre, anche se si riuscisse ad eseguire una routine del BIOS, questa sarebbe a 16 bit e quindi non avrebbe idea di che cosa siano i segmenti a 32 bit definiti prima. Lo step successivo e' quello di comunicare alla CPU la GDT appena creata. Per farlo basta utilizzare il comando `lgdt [gdt_descriptor]`. Infine per effettuare lo switch, bisogna settare il primo bit di cr0 (Control Register: registro speciale della CPU a 32 bit che possiede diversi flag che modificano le operazioni di base del processore) a 1, in modo tale da attivare la protected mode.
 
 I processori utilizzano la tecnica del pipelining che consente loro di portare avanti diversi stadi di esecuzione di un'istruzione in parallelo. Con lo switch, se la pipeline non viene svuotata, c'e' il rischio che le istruzioni successive vengano eseguite in modo errato. Quando la CPU conosce le prossime istruzioni da eseguire, la pipeline funziona molto bene (perche' riesce a fare il prefetch di esse). Cio' non accade quando la CPU esegue un salto o una chiamata a funzione.
 Per svuotare la pipeline bastera' dunque eseguire un far jump (ossia saltare ad un' istruzione appartenente ad un altro segmento).
 
 ## Segmentazione
+
 In real mode, il massimo indirizzo a cui possiamo accedere e' 0xffff (perche' la dimensione dei registri e' 16 bit). Ma la memoria disponibile e' molto piu' grande. Per poter utilizzare una maggior quantita' di memoria si ricorre alla segmentazione.
-La memoria viene suddivisa in pezzi piu' piccoli chiamati segmenti e l'indirizzo di memoria effettivo all'interno di un segmento viene cosi' calcolato: `fisico = 16 * sr (segment register: cs, ds, ss) + offset`,  dove sr e' la base del segmento e offset e' l'indirizzo relativo che voglio raggiungere all'interno di esso. Il bus dell' i8086 era a 20 bit, quindi si riuscivano ad indirizzare 2^20 byte. Per poter usufruire di questo "spazio aggiuntivo", il segment register viene moltiplicato per 16 (ossia shiftato a sinistra di 4 bit) in modo tale da poter indirizzare 2^20 byte invece che 2^16. 
+La memoria viene suddivisa in pezzi piu' piccoli chiamati segmenti e l'indirizzo di memoria effettivo all'interno di un segmento viene cosi' calcolato: `fisico = 16 * sr (segment register: cs, ds, ss) + offset`,  dove sr e' la base del segmento e offset e' l'indirizzo relativo che voglio raggiungere all'interno di esso. Il bus dell' i8086 era a 20 bit, quindi si riuscivano ad indirizzare 2^20 byte. Per poter usufruire di questo "spazio aggiuntivo", il segment register viene moltiplicato per 16 (ossia shiftato a sinistra di 4 bit) in modo tale da poter indirizzare 2^20 byte invece che 2^16.
 
 In protected mode le cose funzionano un po' diversamente: i segment register contengono l'indirizzo di un particolare selettore della GDT. Quando viene effettuato un accesso in memoria si va prima nel selettore della GDT specificato nel segment register, vengono effettuati dei controlli (es. controlla che l'indirizzo specificato non superi il limite, che tu abbia i permessi necessari per completare l'operazione ecc.) e infine viene calcolato l'indirizzo di memoria effettivo: `fisico = base_segmento + offset`
 
 ## Caricare e iniziare l'esecuzione del kernel
+
 Prima di entrare in protected mode bisogna caricare in memoria il kernel (in protected mode le chiamate al BIOS sono disabilitate). Bisognerebbe conoscere la dimensione del kernel in modo da caricare il numero esatto di settori (da capire). Intanto, per non sbagliare, meglio caricare qualche settore in piu'. Una volta caricato il kernel in memoria all'indirizzo 0x1000 una semplice call a tale indirizzo in protected mode permette di eseguire il codice del kernel. In questo modo si salta alla prima istruzione del kernel... non e' detto che sia l'entry point desiderato. Per risolvere il problema basta creare un nuovo file assembly (da posizionare prima dell'inizio del kernel tramite il linker) che chiama la funzione desiderata. In questo modo, spostandosi all'indirizzo di memoria 0x1000, non ci si sposta piu' nella prima istruzione del kernel vero e proprio (che potrebbe non essere quella desiderata), bensi' alla prima istruzione del nuovo file assembly. Da qui si chiama la funzione desiderata del kernel.
 
 ## IDT (Interrupt Descriptor Table)
+
 Gli interrupt possono essere pensati come delle notifiche che avvertono la CPU di un evento avvenuto nel sistema.
 Quando avviene un interrupt la CPU deve salvare lo stato attuale del sistema prima di poter eseguire la routine per soddisfare tale segnale.
 L'IDT e' una tabella contenente esattamente 256 entrate grandi 8 byte ciascuna cosi' definite:
-```
+
+```text
 - 0....15 Offset (2 byte inferiori del descrittore Offset)
 - 16...31 Selector
 - 32...39 Reserved
@@ -84,8 +95,10 @@ L'IDT e' una tabella contenente esattamente 256 entrate grandi 8 byte ciascuna c
 - 47      P
 - 48...63 Offset (2 byte superiori del descrittore Offset)
 ```
-con 
-```
+
+con
+
+```text
 - Offset: entry point dell'ISR (Interrupt Service Routine)
 - Selector: punta ad una entry della GDT
 - Gate Type: le IDT entry vengono chiamate gate. Puo' assumere 5 valori differenti
@@ -97,7 +110,9 @@ con
 - DPL: definisce i livelli di privilegio della CPU che possono accedere a questo interrupt tramite l'istruzione INT. Gli interrupt hardware ignorano questo meccanismo.
 - P: present bit. Deve essere 1 affinche' tale gate sia valido.
 ```
+
 Esistono dunque tre tipi di gate:
-- Interrupt Gate: viene utilizzato per specificare una ISR. Quando viene generato un interrupt (ad esempio `int 30`) la CPU guarda all'interno della IDT alla posizione `indirizzo_IDT + 30 * 8`. In questo caso Selector e Offset vengono utilizzati per chiamare L'ISR corretta.
+
+- Interrupt Gate: viene utilizzato per specificare una ISR. Quando viene generato un interrupt (ad esempio `int 30`) la CPU guarda all'interno della IDT alla posizione `indirizzo prima entry IDT + 30 * 8`. In questo caso Selector e Offset vengono utilizzati per chiamare L'ISR corretta.
 - Trap Gate: viene utilizzata per gestire le eccezioni. Interrupt Gates e Trap Gates sono praticamente la stessa cosa. Differiscono solo per il Gate Type e per il fatto che gli interrupt vengono momentaneamente disabilitati con gli Interrupt Gate.
 - Task Gate: Selector si riferisce ad una posizione della GDT che specfica un Task State Segment invece di un Code Segment e l'Offset e' inutilizzato e quindi settato a 0. Invece di saltare ad una ISR, la CPU fa un hardware task switch (da rivedere).

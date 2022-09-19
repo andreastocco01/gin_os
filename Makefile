@@ -23,10 +23,13 @@ out/boot.bin: boot/boot.asm
 out/kernel.bin: out/kernel.elf
 	objcopy -O binary $< $@
 
-out/kernel.elf: out/kernel_entry.o out/main.o out/print.o out/math.o out/string.o
+out/kernel.elf: out/kernel_entry.o out/main.o out/print.o out/math.o out/string.o out/load_idt.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
 out/kernel_entry.o: boot/kernel_entry.asm
+	nasm $< -felf -o $@
+
+out/load_idt.o: kernel/src/load_idt.asm
 	nasm $< -felf -o $@
 
 out/main.o: kernel/src/main.c

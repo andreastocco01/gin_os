@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 
-uint16_t strlen(char* str);
-void strcopy(char* to, char* from);
+uint32_t strlen(char* str);
+void strcpy(char* to, const char* from);
+void* memset(void * ptr, int value, uint32_t num);
 
 #endif

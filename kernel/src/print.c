@@ -6,7 +6,7 @@ uint8_t* vga_current_address = (uint8_t*) vga_first_address;
 
 void clear_vga() {
     vga_current_address = (uint8_t*) vga_first_address;
-    for(uint16_t i = 0; i < vga_length * vga_height; i++) {
+    for(uint32_t i = 0; i < vga_length * vga_height; i++) {
         *vga_current_address = 0x20;
         vga_current_address += 2;
     }
@@ -15,7 +15,7 @@ void clear_vga() {
 
 void setup_vga() {
     vga_current_address++;
-    for(uint16_t i = 0; i < vga_length * vga_height; i++) {
+    for(uint32_t i = 0; i < vga_length * vga_height; i++) {
         *vga_current_address = vga_color;
         vga_current_address += 2;
     }
@@ -68,9 +68,9 @@ void print_string(char* str) {
     }
 }
 
-uint16_t n_digits(uint32_t n) {
+uint32_t n_digits(uint32_t n) {
     if(n == 0) return 1;
-    uint16_t digits = 1;
+    uint32_t digits = 1;
     uint32_t div = 10;
     while(n / div != 0) {
         digits++;
@@ -80,12 +80,12 @@ uint16_t n_digits(uint32_t n) {
 }
 
 void itoa(char* string, int n) {
-    uint16_t i = 0;
+    uint32_t i = 0;
     if(n < 0) {
         string[i++] = '-';
         n = -n;
     }
-    uint16_t digits = n_digits(n);
+    uint32_t digits = n_digits(n);
     uint32_t div = pow(10, digits - 1);
     uint32_t result = n;
     while(div != 1) {
@@ -103,16 +103,16 @@ void printf(char* string, ...) {
     va_start(args, string); // comincio a scorrere i parametri della funzione a partire dall'ultimo parametro accettato.
                             // ogni invocazione di va_arg prende il parametro successivo.
     char buff[100] = "";
-    uint16_t i = 0;
+    uint32_t i = 0;
     while(*string != 0) {
         if(*string == '%') {
             string++; // salto questo carattere
             switch(*string) {
                 case 'd': {
                     // prendo l'intero da stampare
-                    char str_arg [10] = "";
+                    char str_arg [20] = "";
                     itoa(str_arg, va_arg(args, int));
-                    strcopy(&buff[i], str_arg);
+                    strcpy(&buff[i], str_arg);
                     i += strlen(str_arg);
                     break;
                 }
