@@ -42,9 +42,10 @@ start:
                                       ; metto anche il segmento perche' cosi' obbligo la CPU a fare un far jump e quindi a svuotare la pipeline
                                       ; con il far jump, cs viene automaticamente aggiornato a CODE_SEG
 
-%include "boot/utils/print_string.asm"
-%include "boot/utils/disk_load.asm"
+%include "boot/print_string.asm"
+%include "boot/disk_load.asm"
 %include "boot/gdt.asm"
+%include "boot/disable_cursor.asm"
 
 [bits 32]
 
@@ -73,25 +74,6 @@ start_protected_mode:
     jmp kernel_position ; salto all'indirizzo 0x1000 che, quando verra' eseguito il codice, conterra' la prima istruzione di kernel_entry.
                         ; questo perche' con il linker metto il codice di kernel_entry sopra a quello di kernel.
                         ; da kernel_entry posso decidere il punto di ingresso del kernel, che non deve essere per forza la prima istruzione
-
-
-disable_cursor:
-	pushf
-	push eax
-	push edx
- 
-	mov dx, 0x3D4
-	mov al, 0xA	    ; low cursor shape register
-	out dx, al
- 
-	inc dx
-	mov al, 0x20	; bits 6-7 unused, bit 5 disables the cursor, bits 0-4 control the cursor shape
-	out dx, al
- 
-	pop edx
-	pop eax
-	popf
-	ret
 
 msg_real_mode db 'Started in 16 bit real mode', 0xa, 0xd, 0x0
 msg_protected_mode db 'Switched in 32 bit protected mode', 0x0
