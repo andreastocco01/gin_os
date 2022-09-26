@@ -30,6 +30,7 @@ start:
 
     ; effettuo lo switch in protected mode
 
+    call enable_A20
     cli ; disabilito gli interrupt
     lgdt [gdt_descriptor] ; carico la GDT
     
@@ -41,6 +42,16 @@ start:
     jmp CODE_SEG:start_protected_mode ; CODE_SEG parte da 0 ed e' grande come tutta la memoria, quindi sarebbe uguale fare jmp start_protected_mode
                                       ; metto anche il segmento perche' cosi' obbligo la CPU a fare un far jump e quindi a svuotare la pipeline
                                       ; con il far jump, cs viene automaticamente aggiornato a CODE_SEG
+
+; uso le funzioni del BIOS per abilitare la A20 line.
+; ponendo ax = 0x2400, 0x2401, 0x2402 e chiamando successivamente int 15 si riesce ad disabilitare, abilitare o controllare lo stato (attiva, non attiva) 
+; dell' A20 line.
+enable_A20:
+    push ax
+    mov ax, 0x2401
+    int 0x15
+    pop ax
+    ret
 
 %include "boot/print_string.asm"
 %include "boot/disk_load.asm"
