@@ -12,7 +12,7 @@ LDFLAGS = -m elf_i386 -Ttext 0x1000
 all: run
 
 run: out/os.bin
-	qemu-system-i386 $<
+	qemu-system-x86_64 $<
 
 out/os.bin: out/boot.bin out/kernel.bin
 	cat $^ > $@

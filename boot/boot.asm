@@ -4,7 +4,7 @@
 
 [bits 16]
 
-start:
+start_real_mode:
     mov [disk_num], dl ; il numero del disco da cui sto facendo il booting viene salvato nel registro dl.
                        ; voglio leggere altri dati da questo disco, salvo tale numero in memoria
     mov bp, 0x9000     ; posiziono lo stack in un indirizzo sicuro
@@ -28,14 +28,14 @@ start:
     mov bx, msg_done
     call print_string_rm
 
-    ; effettuo lo switch in protected mode
+    ; preparo lo switch in protected mode
 
     call enable_A20 ; A20 line dovrebbe essere abilitata da qemu automaticamente, per sicurezza la riabilito
     call check_A20
     cli ; disabilito gli interrupt
     lgdt [gdt_descriptor] ; carico la GDT
     
-    ; effettuo lo switch vero e proprio
+    ; effettuo lo switch
     mov eax, cr0
     or eax, 0x1
     mov cr0, eax
@@ -92,6 +92,8 @@ disabled:
 %include "boot/disk_load.asm"
 %include "boot/gdt.asm"
 %include "boot/disable_cursor.asm"
+%include "boot/check_cpuid.asm"
+%include "boot/check_long_mode.asm"
 
 [bits 32]
 
@@ -116,6 +118,11 @@ start_protected_mode:
 
     mov ebx, msg_protected_mode
     call print_string_pm
+
+    ; preparo lo switch in long mode
+    call check_cpuid
+    call check_long_mode
+
     jmp kernel_position ; salto all'indirizzo 0x1000 che, quando verra' eseguito il codice, conterra' la prima istruzione di kernel_entry.
                         ; questo perche' con il linker metto il codice di kernel_entry sopra a quello di kernel.
                         ; da kernel_entry posso decidere il punto di ingresso del kernel, che non deve essere per forza la prima istruzione
