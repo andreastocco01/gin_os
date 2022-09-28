@@ -43,3 +43,6 @@ check_A20:
     mov bx, msg_disabled_A20
     call print_string_rm
     jmp .done
+
+msg_enabled_A20 db 'A20 line is enabled', 0xa, 0xd, 0x0
+msg_disabled_A20 db 'A20 line is disabled', 0xa, 0xd, 0x0

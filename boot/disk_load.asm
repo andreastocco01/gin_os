@@ -20,7 +20,7 @@ disk_load:
 
     ; controllo che non ci siano stati errori
 
-    jc disk_error ; esegue il salto solo se il carry flag e' settato. dopo la chiamata a int 0x13 viene settato per segnalare un guasto generale
+    jc disk_error1 ; esegue il salto solo se il carry flag e' settato. dopo la chiamata a int 0x13 viene settato per segnalare un guasto generale
 
     pop dx ; metto dentro a dx il valore precedente di ax. ora dentro a dl c'e' il numero di settori da leggere
 
@@ -39,5 +39,11 @@ disk_error:
     call print_string_rm
     jmp $
 
+disk_error1:
+    mov bx, disk_error_message1
+    call print_string_rm
+    jmp $
+
 
 disk_error_message db 'Disk read error!', 0xa, 0xd, 0x0
+disk_error_message1 db 'non va un cazzo', 0xa, 0xd, 0x0

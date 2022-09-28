@@ -7,17 +7,20 @@
 CC = gcc
 LD = ld
 CFLAGS = -ffreestanding -m32 -nostdlib -fno-stack-protector
-LDFLAGS = -m elf_i386 -Ttext 0x1000
+LDFLAGS = -m elf_i386 -Ttext 0x2000
 
 all: run
 
 run: out/os.bin
-	qemu-system-x86_64 $<
+	qemu-system-i386 $<
 
-out/os.bin: out/boot.bin out/kernel.bin
+out/os.bin: out/boot.bin out/boot2.bin out/kernel.bin
 	cat $^ > $@
 
 out/boot.bin: boot/boot.asm
+	nasm $< -f bin -o $@
+
+out/boot2.bin: boot/boot2.asm
 	nasm $< -f bin -o $@
 
 out/kernel.bin: out/kernel.elf
