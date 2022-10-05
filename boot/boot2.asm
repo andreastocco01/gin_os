@@ -4,6 +4,8 @@
 
 start:
 
+    mov [disk_num], dl ; copio il numero del disco da cui sto leggendo qui
+
     mov bx, msg_loading_kernel
     call print_string_rm
 
@@ -13,7 +15,7 @@ start:
     mov ch, 0               ; cilindro 0, lo stesso del bootloader
     mov cl, 4               ; nel settore 1 c'e' il bootloader, devo leggere da quello successivo per prelevare il kernel
     mov dh, 0               ; leggo la faccia superiore del disco
-    mov dl, 0               ; leggo dallo stesso disco in cui e' presente il bootloader
+    mov dl, [disk_num]      ; leggo dallo stesso disco in cui e' presente il bootloader
     call disk_load
 
     mov bx, msg_done
@@ -63,9 +65,7 @@ start_protected_mode:
     call check_cpuid
     call check_long_mode
 
-    jmp $
-
-    ;jmp kernel_position ; salto all'indirizzo 0x1000 che, quando verra' eseguito il codice, conterra' la prima istruzione di kernel_entry.
+    jmp kernel_position ; salto all'indirizzo 0x1000 che, quando verra' eseguito il codice, conterra' la prima istruzione di kernel_entry.
                         ; questo perche' con il linker metto il codice di kernel_entry sopra a quello di kernel.
                         ; da kernel_entry posso decidere il punto di ingresso del kernel, che non deve essere per forza la prima istruzione
 
@@ -73,6 +73,7 @@ msg_loading_kernel db 'Loading kernel in memory...', 0x0
 msg_done db 'Done', 0xa, 0xd, 0x0
 msg_protected_mode db 'Switched in 32 bit protected mode', 0x0
 kernel_position equ 0x2000
+disk_num db 0
 
 %include "boot/print_string_rm.asm"
 %include "boot/disk_load.asm"

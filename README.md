@@ -116,3 +116,14 @@ Esistono dunque tre tipi di gate:
 - Interrupt Gate: viene utilizzato per specificare una ISR. Quando viene generato un interrupt (ad esempio `int 30`) la CPU guarda all'interno della IDT alla posizione `indirizzo prima entry IDT + 30 * 8`. In questo caso Selector e Offset vengono utilizzati per chiamare L'ISR corretta.
 - Trap Gate: viene utilizzata per gestire le eccezioni. Interrupt Gates e Trap Gates sono praticamente la stessa cosa. Differiscono solo per il Gate Type e per il fatto che gli interrupt vengono momentaneamente disabilitati con gli Interrupt Gate.
 - Task Gate: Selector si riferisce ad una posizione della GDT che specfica un Task State Segment invece di un Code Segment e l'Offset e' inutilizzato e quindi settato a 0. Invece di saltare ad una ISR, la CPU fa un hardware task switch (da capire).
+
+## Debug kernel
+
+Su un terminale eseguire qemu in debug mode.
+Su un altro terminale:
+
+- gdb
+- target remote :1234
+- layout asm
+- set disassembly-flavor intel
+- break ...

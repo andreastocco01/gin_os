@@ -2,17 +2,20 @@
 # $< = first dependency
 # $^ = all dependencies
 
-.PHONY: clean, run
+.PHONY: clean, run, debug
 
 CC = gcc
 LD = ld
 CFLAGS = -ffreestanding -m32 -nostdlib -fno-stack-protector
 LDFLAGS = -m elf_i386 -Ttext 0x2000
 
-all: run
+all: out/os.bin
 
 run: out/os.bin
-	qemu-system-i386 $<
+	qemu-system-x86_64 $<
+
+debug: out/os.bin
+	qemu-system-x86_64 $< -S -s
 
 out/os.bin: out/boot.bin out/boot2.bin out/kernel.bin
 	cat $^ > $@
