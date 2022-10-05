@@ -1,12 +1,12 @@
 [bits 16]
 
 ; ah -> BIOS read sector function (0x02)
-; al -> numero di settori da leggere
+; al -> numero di settori da leggere (1-128 dec.)
 ; es:bx -> indirizzo di destinazione in memoria
-; ch -> cilindro
-; cl -> settore nel cilindro specificato
-; dh -> 0 faccia superiore, 1 faccia inferiore del disco
-; dl -> disco da cui voglio fare la lettura
+; ch -> cilindro (0-1023 dec.)
+; cl -> settore nel cilindro specificato (1-17 dec.)
+; dh -> testina da cui leggere (0-15 dec.)
+; dl -> disco da cui voglio fare la lettura (0=A:, 1=2nd floppy, 80h=drive 0, 81h=drive 1)
 ; int 0x13 leggo il disco specificato
 
 disk_load:
@@ -16,18 +16,21 @@ disk_load:
     push ax
 
     mov ah, 0x2
-    int 0x13 ; leggo il settore specificato dai parametri della funzione
+    int 0x13                            ; leggo il settore specificato dai parametri della funzione
 
     ; controllo che non ci siano stati errori
 
-    jc disk_error ; esegue il salto solo se il carry flag e' settato. dopo la chiamata a int 0x13 viene settato per segnalare un guasto generale
+    jc disk_error                       ; esegue il salto solo se il carry flag e' settato. dopo la chiamata a int 0x13 viene settato 
+                                        ; per segnalare un guasto generale
 
-    pop dx ; metto dentro a dx il valore precedente di ax. ora dentro a dl c'e' il numero di settori da leggere
+    pop dx                              ; metto dentro a dx il valore precedente di ax. ora dentro a dl c'e' il numero di settori da leggere
 
-    cmp al, dl ; alla fine della lettura 'al' viene settato al numero di settori letti. se e' diverso dal numero di settori richiesti c'e' un errore 
+    cmp al, dl                          ; alla fine della lettura 'al' viene settato al numero di settori letti. se e' diverso
+                                        ; dal numero di settori richiesti c'e' un errore 
     jne disk_error
 
     ; ripristino il contenuto dei registri
+    
     mov ax, dx
     pop bx
     pop cx

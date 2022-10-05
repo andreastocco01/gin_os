@@ -7,7 +7,7 @@
 CC = gcc
 LD = ld
 CFLAGS = -ffreestanding -m32 -nostdlib -fno-stack-protector
-LDFLAGS = -m elf_i386 -Ttext 0x2000
+LDFLAGS = -m elf_i386 -Ttext 0x2000 #linker.ld
 
 all: out/os.bin
 
@@ -17,13 +17,13 @@ run: out/os.bin
 debug: out/os.bin
 	qemu-system-x86_64 $< -S -s
 
-out/os.bin: out/boot.bin out/boot2.bin out/kernel.bin
+out/os.bin: out/first_stage.bin out/second_stage.bin out/kernel.bin
 	cat $^ > $@
 
-out/boot.bin: boot/boot.asm
+out/first_stage.bin: boot/first_stage.asm
 	nasm $< -f bin -o $@
 
-out/boot2.bin: boot/boot2.asm
+out/second_stage.bin: boot/second_stage.asm
 	nasm $< -f bin -o $@
 
 out/kernel.bin: out/kernel.elf
