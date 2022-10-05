@@ -16,17 +16,17 @@ p2_table:                                   ; page directory table
 section .text
 
 setup_identity_paging:
-    mov eax, p3_table                      ; salvo in eax l'indirizzo della prima entry di pdp table
-    or eax, 11b                             ; in questo modo setto i primi due bit dell' indirizzo contenuto in eax ad 1 (present, writable bits)
+    mov eax, p3_table                       ; salvo in eax l'indirizzo della prima entry di pdp table
+    or eax, 0b11                            ; in questo modo setto i primi due bit dell' indirizzo contenuto in eax ad 1 (present, writable bits)
                                             ; ogni entry all'interno di una page table e' un indirizzo. avendo allineato tutte le page
                                             ; table a 4096 i primi 12 bit (2 ^ 12 = 4096) vengono ignorati dalla cpu.
                                             ; di conseguenza posso utilizzarli come metadata senza cambiare l'indirizzo.
     
-    mov dword [p4_table + 0], eax             ; la prima entry di pml4 table punta alla prima entry di pdp table
+    mov [p4_table], eax                     ; la prima entry di pml4 table punta alla prima entry di pdp table
 
     mov eax, p2_table
-    or eax, 11b
-    mov dword [p3_table + 0], eax              ; la prima entry di pdp table punta alla prima entry di pd table
+    or eax, 0b11
+    mov [p3_table], eax                     ; la prima entry di pdp table punta alla prima entry di pd table
 
     ; adesso devo far si che le entry di pd_table puntino effettivamente a delle page table.
     ; la prima entry deve puntare ad una page table che parte dall' indirizzo 0
@@ -37,7 +37,7 @@ setup_identity_paging:
 .map_p2_table:
     mov eax, 0x200000                       ; 2MB
     mul ecx                                 ; eax = eax * ecx
-    or eax, 10000011b                       ; setto a 1, oltre che present e writable, anche huge bit
+    or eax, 0b10000011                      ; setto a 1, oltre che present e writable, anche huge bit
                                             ; (indica che la dimensione delle pagine non e' 4Kb ma 2MB)
 
     mov [p2_table + ecx * 8], eax           ; salvo la nuova entry

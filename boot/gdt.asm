@@ -1,3 +1,5 @@
+[bits 16]
+
 gdt_start:
 
 gdt_null:

@@ -67,9 +67,15 @@ start_protected_mode:
 
     call check_cpuid
     call check_long_mode
-    ;call setup_identity_paging
-    ;call enable_paging
-    ;call edit_gdt
+    call setup_identity_paging
+    call enable_paging
+    call edit_gdt
+
+    jmp CODE_SEG:start_long_mode
+
+[bits 64]
+
+start_long_mode:
 
     jmp kernel_position                     ; salto all'indirizzo 0x1000 che, quando verra' eseguito il codice, conterra'
                                             ; la prima istruzione di kernel_entry.
@@ -91,7 +97,7 @@ disk_num db 0
 %include "boot/print_string_pm.asm"
 %include "boot/check_cpuid.asm"
 %include "boot/check_long_mode.asm"
-;%include "boot/setup_identity_paging.asm"
-;%include "boot/enable_paging.asm"
+%include "boot/setup_identity_paging.asm"
+%include "boot/enable_paging.asm"
 
 times 1024 - ($ - $$) db 0
