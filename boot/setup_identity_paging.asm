@@ -2,7 +2,7 @@
 
 section .bss
 
-align 4096                                  ; in questo modo tutte le page table si trovano ad indirizzi multipli di 4096
+align 0x4000                                ; in questo modo tutte le page table si trovano ad indirizzi multipli di 4096
 
 p4_table:                                   ; page map level four table
     resb 4096
