@@ -6,8 +6,8 @@
 
 CC = gcc
 LD = ld
-CFLAGS = -ffreestanding -m32 -nostdlib -fno-stack-protector
-LDFLAGS = -m elf_i386 -Ttext 0x2000 #linker.ld
+CFLAGS = -ffreestanding -m64 -nostdlib -fno-stack-protector
+LDFLAGS = -Ttext 0x2000 #linker.ld
 
 all: out/os.bin
 
@@ -33,10 +33,10 @@ out/kernel.elf: out/kernel_entry.o out/main.o out/print.o out/math.o out/string.
 	$(LD) $(LDFLAGS) $^ -o $@
 
 out/kernel_entry.o: boot/kernel_entry.asm
-	nasm $< -felf -o $@
+	nasm $< -felf64 -o $@
 
 out/load_idt.o: kernel/src/load_idt.asm
-	nasm $< -felf -o $@
+	nasm $< -felf64 -o $@
 
 out/main.o: kernel/src/main.c
 	$(CC) $(CFLAGS) -c $< -o $@

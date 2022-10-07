@@ -1,4 +1,4 @@
-[bits 32]
+[bits 64]
 global load_idt
 extern idt_pointer
 
