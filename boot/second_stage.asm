@@ -80,9 +80,7 @@ start_long_mode:
     mov rax, 0x2f592f412f4b2f4f
     mov qword [0xb8000], rax
 
-    jmp $
-
-    ;jmp kernel_position                     ; salto all'indirizzo 0x2000 che, quando verra' eseguito il codice, conterra'
+    jmp kernel_position                     ; salto all'indirizzo 0x2000 che, quando verra' eseguito il codice, conterra'
                                             ; la prima istruzione di kernel_entry.
                                             ; questo perche' con il linker metto il codice di kernel_entry sopra a quello di kernel.
                                             ; da kernel_entry posso decidere il punto di ingresso del kernel, che non deve essere per forza
