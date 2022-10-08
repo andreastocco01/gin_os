@@ -1,15 +1,35 @@
 # GinOS
 
-```text
-- $ indirizzo istruzione corrente
-- $$ indirizzo sezione corrente
-```
+## Struttura del progetto
 
-$ - $$ fornisce l'offset tra l'istruzione corrente e la sezione corrente
+Il progetto e' suddiviso in due parti: il `bootloader` e il `kernel`
 
-Gli ultimi 2 byte devono essere utilizzati per il magic number 0xaa55 che dice al BIOS che si tratta di un boot block e non di semplici dati che si trovano nel primo settore del disco.
-L'istruzione `times 510 - ($ - $$) db 0` rimpie di 0 lo spazio tra l'ultima istruzione e il 510 byte.
+### Bootlaoder
+
+Questa sezione del progetto si occupa di:
+
+- passare dalla real mode alla long mode (passando per la protected mode)
+
+- caricare il kernel in memoria
+
+- passare all' esecuzione di esso
+
+Il primo settore del disco viene riconosciuto come boot block dal BIOS solo se i suoi ultimi due byte contengono il magic number 0xaa55.
+L'istruzione `times 510 - ($ - $$) db 0` rimpie di 0 lo spazio tra l'ultima istruzione e il 510esimo byte ($ - $$ fornisce l'offset tra l'istruzione corrente e la sezione corrente).
 In questo modo si riesce a collocare il magic number nella posizione giusta.
+Per il BIOS, quindi, il bootloader deve essere grande 512 byte, ma tale spazio e' al quanto riduttivo per implementare tutte le funzioni sopracitate.
+Per questo motivo e' stato suddiviso in due parti (multistage bootloader):
+
+- `first stage` si occupa esclusivamente di caricare in memoria `second stage` che non ha limitazioni sulla dimensione!
+- `second stage` si occupa di passare in 64 bit long mode, caricare il kernel in memoria e iniziare l'esecuzione di esso.
+
+### Kernel
+
+Questa sezione del progetto si occupa di:
+
+- creare la IDT (Interrupt Descriptor Table)
+
+- `TODO`
 
 ## 32 bit protected mode
 
@@ -38,7 +58,7 @@ Ogni entry della tabella e' grande esattamente 8 byte e la sua struttura e' la s
 
 Con Access Byte cosi' suddiviso:
 - 40        Ac      (Accessed: viene settato a 1 quando viene fatto un accesso a tale segmento. Inizialmente e' 0)
-- 41        RW      (Readable (Code Segment): 1->Lettura. Non e' concessa scrittura. Writable (Data Segment): 1->Scrittura. E' sempre possibile Lettura)
+- 41        RW      (Readable (Code Segment): 1 -> Lettura. Non e' concessa scrittura. Writable (Data Segment): 1 -> Scrittura. E' sempre possibile Lettura)
 - 42        DC      (Direction (Code Segment): 1 -> il codice puo' essere eseguito da un livello di privilegio inferiore. 0 -> eseguito solo da Privl
                      Conforming (Data Segment): 1 -> il segmento cresce verso il basso. Normalmente viene settato a 0)
 - 43        Ex      (Executable: 1 -> il codice all'interno del segmento e' eseguibile)
@@ -77,7 +97,7 @@ In protected mode le cose funzionano un po' diversamente: i segment register con
 
 ## Caricare e iniziare l'esecuzione del kernel
 
-Prima di entrare in protected mode bisogna caricare in memoria il kernel (in protected mode le chiamate al BIOS sono disabilitate). Bisognerebbe conoscere la dimensione del kernel in modo da caricare il numero esatto di settori (da capire). Intanto, per non sbagliare, meglio caricare qualche settore in piu'. Una volta caricato il kernel in memoria all'indirizzo 0x1000 una semplice call a tale indirizzo in protected mode permette di eseguire il codice del kernel. In questo modo si salta alla prima istruzione del kernel... non e' detto che sia l'entry point desiderato. Per risolvere il problema basta creare un nuovo file assembly (da posizionare prima dell'inizio del kernel tramite il linker) che chiama la funzione desiderata. In questo modo, spostandosi all'indirizzo di memoria 0x1000, non ci si sposta piu' nella prima istruzione del kernel vero e proprio (che potrebbe non essere quella desiderata), bensi' alla prima istruzione del nuovo file assembly. Da qui si chiama la funzione desiderata del kernel.
+Prima di entrare in protected mode bisogna caricare in memoria il kernel (in protected mode le chiamate al BIOS sono disabilitate). Bisognerebbe conoscere la dimensione del kernel in modo da caricare il numero esatto di settori (da capire). Una volta caricato il kernel in memoria all'indirizzo 0x2000 una semplice call a tale indirizzo in protected mode permette di eseguire il codice del kernel. In questo modo si salta alla prima istruzione del kernel... non e' detto che sia l'entry point desiderato. Per risolvere il problema basta creare un nuovo file assembly (da posizionare prima dell'inizio del kernel tramite il linker) che chiama la funzione desiderata. In questo modo, spostandosi all'indirizzo di memoria 0x2000, non ci si sposta piu' nella prima istruzione del kernel vero e proprio (che potrebbe non essere quella desiderata), bensi' alla prima istruzione del nuovo file assembly. Da qui si chiama la funzione desiderata del kernel.
 
 ## IDT (Interrupt Descriptor Table)
 
@@ -86,14 +106,14 @@ Quando avviene un interrupt la CPU deve salvare lo stato attuale del sistema pri
 L'IDT e' una tabella contenente esattamente 256 entrate grandi 8 byte ciascuna cosi' definite:
 
 ```text
-- 0....15 Offset (2 byte inferiori del descrittore Offset)
+- 0....15 Offset        (2 byte inferiori del descrittore Offset)
 - 16...31 Selector
 - 32...39 Reserved
 - 40...43 Gate Type
-- 44      0      (e' sempre settato a 0)
+- 44      0             (e' sempre settato a 0)
 - 45...46 DPL
 - 47      P
-- 48...63 Offset (2 byte superiori del descrittore Offset)
+- 48...63 Offset        (2 byte superiori del descrittore Offset)
 ```
 
 con
@@ -115,7 +135,7 @@ Esistono dunque tre tipi di gate:
 
 - Interrupt Gate: viene utilizzato per specificare una ISR. Quando viene generato un interrupt (ad esempio `int 30`) la CPU guarda all'interno della IDT alla posizione `indirizzo prima entry IDT + 30 * 8`. In questo caso Selector e Offset vengono utilizzati per chiamare L'ISR corretta.
 - Trap Gate: viene utilizzata per gestire le eccezioni. Interrupt Gates e Trap Gates sono praticamente la stessa cosa. Differiscono solo per il Gate Type e per il fatto che gli interrupt vengono momentaneamente disabilitati con gli Interrupt Gate.
-- Task Gate: Selector si riferisce ad una posizione della GDT che specfica un Task State Segment invece di un Code Segment e l'Offset e' inutilizzato e quindi settato a 0. Invece di saltare ad una ISR, la CPU fa un hardware task switch (da capire).
+- Task Gate: Selector si riferisce ad una posizione della GDT che specfica un Task State Segment invece di un Code Segment (l'Offset e' inutilizzato e quindi settato a 0). Invece di saltare ad una ISR, la CPU fa un hardware task switch (da capire).
 
 ## Debug kernel
 

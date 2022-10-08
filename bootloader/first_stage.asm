@@ -43,8 +43,8 @@ msg_done db 'Done', 0xa, 0xd, 0x0
 disk_num db 0
 second_stage_position equ 0x1000
 
-%include "boot/print_string_rm.asm"
-%include "boot/disk_load.asm"
+%include "bootloader/print_string_rm.asm"
+%include "bootloader/disk_load.asm"
 
 times 510 - ($ - $$) db 0
 dw 0xaa55

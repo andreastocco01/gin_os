@@ -92,15 +92,15 @@ msg_protected_mode db 'Switched in 32 bit protected mode', 0x0
 kernel_position equ 0x2000
 disk_num db 0
 
-%include "boot/print_string_rm.asm"
-%include "boot/disk_load.asm"
-%include "boot/a20.asm"
-%include "boot/gdt.asm"
-%include "boot/disable_cursor.asm"
-%include "boot/print_string_pm.asm"
-%include "boot/check_cpuid.asm"
-%include "boot/check_long_mode.asm"
-%include "boot/setup_identity_paging.asm"
-%include "boot/enable_paging.asm"
+%include "bootloader/print_string_rm.asm"
+%include "bootloader/disk_load.asm"
+%include "bootloader/a20.asm"
+%include "bootloader/gdt.asm"
+%include "bootloader/disable_cursor.asm"
+%include "bootloader/print_string_pm.asm"
+%include "bootloader/check_cpuid.asm"
+%include "bootloader/check_long_mode.asm"
+%include "bootloader/setup_identity_paging.asm"
+%include "bootloader/enable_paging.asm"
 
 times 1024 - ($ - $$) db 0

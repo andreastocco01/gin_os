@@ -20,10 +20,10 @@ debug: out/os.bin
 out/os.bin: out/first_stage.bin out/second_stage.bin out/kernel.bin
 	cat $^ > $@
 
-out/first_stage.bin: boot/first_stage.asm
+out/first_stage.bin: bootloader/first_stage.asm
 	nasm $< -f bin -o $@
 
-out/second_stage.bin: boot/second_stage.asm
+out/second_stage.bin: bootloader/second_stage.asm
 	nasm $< -f bin -o $@
 
 out/kernel.bin: out/kernel.elf
@@ -32,7 +32,7 @@ out/kernel.bin: out/kernel.elf
 out/kernel.elf: out/kernel_entry.o out/main.o out/print.o out/math.o out/string.o out/load_idt.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
-out/kernel_entry.o: boot/kernel_entry.asm
+out/kernel_entry.o: bootloader/kernel_entry.asm
 	nasm $< -felf64 -o $@
 
 out/load_idt.o: kernel/src/load_idt.asm
