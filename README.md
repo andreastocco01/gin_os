@@ -17,7 +17,7 @@ Questa sezione del progetto si occupa di:
 Il primo settore del disco viene riconosciuto come boot block dal BIOS solo se i suoi ultimi due byte contengono il magic number 0xaa55.
 L'istruzione `times 510 - ($ - $$) db 0` rimpie di 0 lo spazio tra l'ultima istruzione e il 510esimo byte ($ - $$ fornisce l'offset tra l'istruzione corrente e la sezione corrente).
 In questo modo si riesce a collocare il magic number nella posizione giusta.
-Per il BIOS, quindi, il bootloader deve essere grande 512 byte, ma tale spazio e' al quanto riduttivo per implementare tutte le funzioni sopracitate.
+Per il BIOS, quindi, il bootloader deve essere grande esattamente 512 byte, ma tale spazio e' al quanto riduttivo per poter implementare tutte le funzioni sopracitate.
 Per questo motivo e' stato suddiviso in due parti (multistage bootloader):
 
 - `first stage` si occupa esclusivamente di caricare in memoria `second stage` che non ha limitazioni sulla dimensione!
@@ -41,6 +41,13 @@ In protected mode la segmentazione offre principalmente due vantaggi:
 
 - il codice di un segmento puo' essere interdetto dall'esecuzione del codice di un segmento piu' privilegiato, in modo da proteggere il codice del kernel dalle applicazioni utente.
 - si puo' implementare la memoria virtuale in modo che le pagine di memoria di un processo possano essere spostate sul disco o in RAM in base alle necessita'.
+
+## Segmentazione
+
+In real mode, il massimo indirizzo a cui possiamo accedere e' 0xffff (perche' la dimensione dei registri e' 16 bit). Ma la memoria disponibile e' molto piu' grande. Per poter utilizzare una maggior quantita' di memoria si ricorre alla segmentazione.
+La memoria viene suddivisa in pezzi piu' piccoli chiamati segmenti e l'indirizzo di memoria effettivo all'interno di un segmento viene cosi' calcolato: `fisico = 16 * sr (segment register: cs, ds, ss) + offset`,  dove sr e' la base del segmento e offset e' l'indirizzo relativo che voglio raggiungere all'interno di esso. Il bus dell' i8086 era a 20 bit, quindi si riuscivano ad indirizzare 2^20 byte. Per poter usufruire di questo "spazio aggiuntivo", il segment register viene moltiplicato per 16 (ossia shiftato a sinistra di 4 bit) in modo tale da poter indirizzare 2^20 byte invece che 2^16.
+
+In protected mode le cose funzionano un po' diversamente: i segment register contengono l'indirizzo di un particolare selettore della GDT. Quando viene effettuato un accesso in memoria si va prima nel selettore della GDT specificato nel segment register, vengono effettuati dei controlli (es. controlla che l'indirizzo specificato non superi il limite, che tu abbia i permessi necessari per completare l'operazione ecc.) e infine viene calcolato l'indirizzo di memoria effettivo: `fisico = base_segmento + offset`
 
 ## GDT (Global Descriptor Table)
 
@@ -88,16 +95,31 @@ Una volta definita la GDT bisogna abilitare la A20 line (da capire) e disabilita
 I processori utilizzano la tecnica del pipelining che consente loro di portare avanti diversi stadi di esecuzione di un'istruzione in parallelo. Con lo switch, se la pipeline non viene svuotata, c'e' il rischio che le istruzioni successive vengano eseguite in modo errato. Quando la CPU conosce le prossime istruzioni da eseguire, la pipeline funziona molto bene (perche' riesce a fare il prefetch di esse). Cio' non accade quando la CPU esegue un salto o una chiamata a funzione.
 Per svuotare la pipeline bastera' dunque eseguire un far jump (ossia saltare ad un' istruzione appartenente ad un altro segmento).
 
-## Segmentazione
+## 64 bit long mode
 
-In real mode, il massimo indirizzo a cui possiamo accedere e' 0xffff (perche' la dimensione dei registri e' 16 bit). Ma la memoria disponibile e' molto piu' grande. Per poter utilizzare una maggior quantita' di memoria si ricorre alla segmentazione.
-La memoria viene suddivisa in pezzi piu' piccoli chiamati segmenti e l'indirizzo di memoria effettivo all'interno di un segmento viene cosi' calcolato: `fisico = 16 * sr (segment register: cs, ds, ss) + offset`,  dove sr e' la base del segmento e offset e' l'indirizzo relativo che voglio raggiungere all'interno di esso. Il bus dell' i8086 era a 20 bit, quindi si riuscivano ad indirizzare 2^20 byte. Per poter usufruire di questo "spazio aggiuntivo", il segment register viene moltiplicato per 16 (ossia shiftato a sinistra di 4 bit) in modo tale da poter indirizzare 2^20 byte invece che 2^16.
+In long mode i registri possono contenere 64 bit -> 2^64 byte di memoria indirizzabile (17'179'869'184 GB)
+Diversamente dalla protected mode, che puo' girare con o senza paging, in long mode il paging (in particolare il PAE paging) e' obbligatorio. La segmentazione non viene utilizzata.
 
-In protected mode le cose funzionano un po' diversamente: i segment register contengono l'indirizzo di un particolare selettore della GDT. Quando viene effettuato un accesso in memoria si va prima nel selettore della GDT specificato nel segment register, vengono effettuati dei controlli (es. controlla che l'indirizzo specificato non superi il limite, che tu abbia i permessi necessari per completare l'operazione ecc.) e infine viene calcolato l'indirizzo di memoria effettivo: `fisico = base_segmento + offset`
+## PAE paging
+
+La paginazione PAE e' un tipo di paginazione in cui sono presenti le seguenti tabelle: page-directory pointer table (`PDPT`), page-directory table (`PDT`) e page table (`PT`). C'è anche un'altra tabella che costituisce la radice della paginazione gerarchica ed è la page-map level-4 table (`PML4T`). In protected mode le entry di una page table erano lunghe solo 4 byte, quindi c'erano 1024 entry per tabella. In long mode, invece, si hanno solo 512 entry per tabella, poiché ogni entry è lunga 8 byte. Ciò significa che le PT entry possono indirizzare 4kB, le PDT entry possono indirizzare 2MB, le PDPT entry possono indirizzare 1GB e le PML4T entry possono indirizzare 512GB. E' quindi possibile indirizzare solo 256 TB. Il funzionamento di queste tabelle prevede che ogni entry della PML4T punti a una PDPT, ogni entry di una PDPT a una PDT e ogni entry di una PDT a una PT. Ogni entry di un PT punta poi all'indirizzo fisico.
+
+## Entrare in 64 bit long mode
+
+La long mode non e' supportata da tutti i processori. Per verificare che il processore in questione supporti la long mode si ricorre alla chiamata di una funzione speciale chiamata `CPUID`. Tale funzione ritorna diverse informazioni sul processore in base all'argomento che gli viene passato.
+Per prima cosa si verifica che tale istruzione sia supportata: cio' accade se si riesce a flippare il 21 bit del registro FLAGS.
+Se tale test va a buon fine l'istruzione CPUID puo' essere chiamata per capire se la long mode e' supportata. Passandole come parametro il valore `0x80000001`, CPUID ritorna nei registri `ecx` e `edx` alcune informazioni utili sul processore. Se il 29esimo bit ritornato all'interno del registro edx e' settato, significa che il processore e' in grado di entrare in long mode.
+
+PAE paging e' obbligatorio per la long mode. Bisogna quindi implementare il PAE paging e abilitarlo.
+Dopo aver creato le page tables, devo implementare l'identity paging. Per farlo basta collegare ognuna delle 512 entry della PD table all'indirizzo di una PT in memoria (grande 2MB) e collegare P4 -> P3 -> P2.
+Per abilitare il PAE e', infine, sufficiente mettere dentro al registro `cr3` l'indirizzo della PML4T e settare il quinto bit del registro `cr4`.
+Poi si abilita il paging settando il 31esimo bit del registro `cr0`.
+Successivamente e' possibile entrare in long mode attraverso un far jump (come nel caso della protected mode).
+Prima di fare questo e' pero' necessario aggiornare i selettori della GDT per far si che si riferiscano a segmenti di 64 bit.
 
 ## Caricare e iniziare l'esecuzione del kernel
 
-Prima di entrare in protected mode bisogna caricare in memoria il kernel (in protected mode le chiamate al BIOS sono disabilitate). Bisognerebbe conoscere la dimensione del kernel in modo da caricare il numero esatto di settori (da capire). Una volta caricato il kernel in memoria all'indirizzo 0x2000 una semplice call a tale indirizzo in protected mode permette di eseguire il codice del kernel. In questo modo si salta alla prima istruzione del kernel... non e' detto che sia l'entry point desiderato. Per risolvere il problema basta creare un nuovo file assembly (da posizionare prima dell'inizio del kernel tramite il linker) che chiama la funzione desiderata. In questo modo, spostandosi all'indirizzo di memoria 0x2000, non ci si sposta piu' nella prima istruzione del kernel vero e proprio (che potrebbe non essere quella desiderata), bensi' alla prima istruzione del nuovo file assembly. Da qui si chiama la funzione desiderata del kernel.
+Prima di entrare in protected mode bisogna caricare in memoria il kernel (in protected mode le chiamate al BIOS sono disabilitate). Bisognerebbe conoscere la dimensione del kernel in modo da caricare il numero esatto di settori (da capire). Una volta caricato il kernel in memoria all'indirizzo 0x2000 una semplice call a tale indirizzo in long mode permette di eseguire il codice del kernel. In questo modo si salta alla prima istruzione del kernel... non e' detto che sia l'entry point desiderato. Per risolvere il problema basta creare un nuovo file assembly (da posizionare prima dell'inizio del kernel tramite il linker) che chiama la funzione desiderata. In questo modo, spostandosi all'indirizzo di memoria 0x2000, non ci si sposta piu' nella prima istruzione del kernel vero e proprio (che potrebbe non essere quella desiderata), bensi' alla prima istruzione del nuovo file assembly. Da qui si chiama la funzione desiderata del kernel.
 
 ## IDT (Interrupt Descriptor Table)
 
