@@ -14,7 +14,7 @@ int main() {
     IdtEntry idt[256]; // l'idt deve avere 256 entry.
     memset(idt, 0, sizeof(IdtEntry) * 256); // ogni byte della tabella viene inizializzata a 0
     IdtPointer idt_pointer;
-    idt_pointer.base = (uint32_t*) &idt;
+    idt_pointer.base = (uint64_t*) &idt;
     idt_pointer.limit = (sizeof(IdtEntry) * 256) - 1;
     load_idt();
     printf("Done\n");
