@@ -123,41 +123,43 @@ Prima di entrare in protected mode bisogna caricare in memoria il kernel (in pro
 
 ## IDT (Interrupt Descriptor Table)
 
+Struttura IDT in long mode (vedere OSDev per IDT in protected mode).
+
 Gli interrupt possono essere pensati come delle notifiche che avvertono la CPU di un evento avvenuto nel sistema.
 Quando avviene un interrupt la CPU deve salvare lo stato attuale del sistema prima di poter eseguire la routine per soddisfare tale segnale.
 L'IDT e' una tabella contenente esattamente 256 entrate grandi 8 byte ciascuna cosi' definite:
 
 ```text
-- 0....15 Offset        (2 byte inferiori del descrittore Offset)
-- 16...31 Selector
-- 32...39 Reserved
-- 40...43 Gate Type
-- 44      0             (e' sempre settato a 0)
-- 45...46 DPL
-- 47      P
-- 48...63 Offset        (2 byte superiori del descrittore Offset)
+- 0....15  Offset        (2 byte inferiori del descrittore Offset)
+- 16...31  Selector
+- 32...34  IST
+- 35...39  Reserved
+- 40...43  Gate Type
+- 44       Zero
+- 45...46  DPL
+- 47       P
+- 48...63  Offset        (2 byte mediani del descrittore Offset)
+- 64...95  Offset        (2 byte superiori del descrittore Offset)
+- 96...127 Reserved
 ```
 
 con
 
 ```text
-- Offset: entry point dell'ISR (Interrupt Service Routine)
+- Offset: indirizzo dell' entry point dell'ISR (Interrupt Service Routine)
 - Selector: punta ad una entry della GDT
-- Gate Type: le IDT entry vengono chiamate gate. Puo' assumere 5 valori differenti
-    - 0x5 -> Task Gate, in questo caso l'Offset non viene utilizzato e quindi deve essere settato a 0
-    - 0x6 -> 16 bit Interrupt Gate
-    - 0x7 -> 16 bit Trap Gate
-    - 0xe -> 32 bit Interrupt Gate
-    - 0xf -> 32 bit Trap Gate
+- IST: offset all' interno della Interrupt Stack Table, salvata nel Task State Segment. 000 -> Interrupt Stack Table non utilizzata
+- Gate Type: le IDT entry vengono chiamate gate. In long mode esistono solo 2 tipi di gate:
+    - 0b1110 -> Interrupt Gate
+    - 0b1111 -> Trap Gate
 - DPL: definisce i livelli di privilegio della CPU che possono accedere a questo interrupt tramite l'istruzione INT. Gli interrupt hardware ignorano questo meccanismo.
 - P: present bit. Deve essere 1 affinche' tale gate sia valido.
 ```
 
-Esistono dunque tre tipi di gate:
+Esistono dunque due tipi di gate:
 
 - Interrupt Gate: viene utilizzato per specificare una ISR. Quando viene generato un interrupt (ad esempio `int 30`) la CPU guarda all'interno della IDT alla posizione `indirizzo prima entry IDT + 30 * 8`. In questo caso Selector e Offset vengono utilizzati per chiamare L'ISR corretta.
 - Trap Gate: viene utilizzata per gestire le eccezioni. Interrupt Gates e Trap Gates sono praticamente la stessa cosa. Differiscono solo per il Gate Type e per il fatto che gli interrupt vengono momentaneamente disabilitati con gli Interrupt Gate.
-- Task Gate: Selector si riferisce ad una posizione della GDT che specfica un Task State Segment invece di un Code Segment (l'Offset e' inutilizzato e quindi settato a 0). Invece di saltare ad una ISR, la CPU fa un hardware task switch (da capire).
 
 ## Debug kernel
 
