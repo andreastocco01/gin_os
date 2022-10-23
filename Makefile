@@ -7,7 +7,7 @@
 CC = gcc
 LD = ld
 CFLAGS = -ffreestanding -m64 -nostdlib -fno-stack-protector
-LDFLAGS = -Ttext 0x2000 #linker.ld
+LDFLAGS = -T linker.ld
 
 all: out/os.bin
 

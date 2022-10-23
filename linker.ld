@@ -1,17 +1,21 @@
-ENTRY (start)
+ENTRY (main)
 
 SECTIONS {
     . = 0x2000;
 
     .text :
     {
-        out/kernel_entry.o(.text)
-        out/main.o(.text)
         *(.text)
     }
     
+    .data :
+    {
+        *(.data)
+    }
+
     .bss :
     {
         *(.bss)
     }
+
 }
